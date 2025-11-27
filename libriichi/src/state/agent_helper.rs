@@ -514,14 +514,14 @@ impl PlayerState {
 
         let mut can_discard = self.last_cans.can_discard;
         let (tsumos_left, calc_haitei) = if can_discard {
-            (self.tiles_left / 4, self.tiles_left.is_multiple_of(4))
+            (self.tiles_left / 4, (self.tiles_left % 4 == 0))
         } else {
             let target = self.rel(self.last_cans.target_actor) as u8;
             // Let's just ignore chankan here.
             let tiles_left_at_next_tsumo = self.tiles_left.saturating_sub(4 - target);
             (
                 tiles_left_at_next_tsumo / 4,
-                tiles_left_at_next_tsumo.is_multiple_of(4),
+                (tiles_left_at_next_tsumo % 4 == 0),
             )
         };
         ensure!(tsumos_left >= 1, "need at least one more tsumo");

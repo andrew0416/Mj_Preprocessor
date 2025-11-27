@@ -1,3 +1,5 @@
+cargo-features = ["edition2024"]
+
 [package]
 name = "libriichi"
 version = "0.1.0"
@@ -28,7 +30,13 @@ derivative = "2"
 ahash = "0.8"
 parking_lot = "0.12"
 crossbeam = "0.8"
-pyo3 = { version = "0.25", features = ["auto-initialize", "multiple-pymethods", "anyhow"] }
+pyo3 = { version = "0.25", features = [
+    "extension-module",   # 파이썬 확장 모듈로 빌드
+    "abi3-py310",         # Py3.10 이상에서 ABI 호환성 유지
+    "auto-initialize",    # 파이썬 런타임 자동 초기화
+    "multiple-pymethods", # 여러 #[pymethods] 블록 허용
+    "anyhow"              # 오류 핸들링에 anyhow 지원
+] }
 indicatif = { version = "0.17", features = ["rayon"] }
 tinyvec = { version = "1", features = ["alloc", "serde", "rustc_1_57"] }
 serde = { version = "1", features = ["derive"] }

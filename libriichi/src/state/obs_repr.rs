@@ -122,7 +122,77 @@ impl<'a> ObsEncoderContext<'a> {
             version,
         }
     }
+    fn fill_action_mask(&mut self) {
+        let state = self.state;
+        let cans = state.last_cans;
 
+        // 1) PASS (at_kan_select에 따른 특수 처리)
+        if cans.can_pass() {
+            if !self.at_kan_select {
+                // PASS 고정 슬롯
+                self.mask[ACTION_SPACE - 1] = true; // 45
+            } else if cans.can_daiminkan {
+                // 깡 선택 모드에선 마지막 화료 타일 id로 선택
+                if let Some(tile) = state.last_kawa_tile {
+                    let tid = tile.deaka().as_usize();
+                    self.mask[tid] = true;
+                }
+            }
+        }
+
+        // 2) 버림 (at_kan_select=false에서만 공용)
+        if cans.can_discard && !self.at_kan_select {
+            for (t, &ok) in state.discard_candidates_aka().iter().enumerate() {
+                if ok {
+                    self.mask[t] = true; // 0..=36 (aka 포함)
+                }
+            }
+        }
+
+        // 3) 리치/치/폰
+        if cans.can_riichi && !self.at_kan_select {
+            self.mask[37] = true;
+        }
+        if !self.at_kan_select {
+            if cans.can_chi_low  { self.mask[38] = true; }
+            if cans.can_chi_mid  { self.mask[39] = true; }
+            if cans.can_chi_high { self.mask[40] = true; }
+            if cans.can_pon      { self.mask[41] = true; }
+        }
+
+        // 4) 깡 (선택 모드면 개별 타일 슬롯을 킨다)
+        if cans.can_daiminkan {
+            if self.at_kan_select {
+                if let Some(tile) = state.last_kawa_tile {
+                    self.mask[tile.deaka().as_usize()] = true;
+                }
+            } else {
+                self.mask[42] = true;
+            }
+        }
+        if cans.can_ankan {
+            if self.at_kan_select {
+                for tile in state.ankan_candidates {
+                    self.mask[tile.as_usize()] = true;
+                }
+            } else {
+                self.mask[42] = true;
+            }
+        }
+        if cans.can_kakan {
+            if self.at_kan_select {
+                for tile in state.kakan_candidates {
+                    self.mask[tile.as_usize()] = true;
+                }
+            } else {
+                self.mask[42] = true;
+            }
+        }
+
+        // 5) 아가리/유국
+        if cans.can_agari()   && !self.at_kan_select { self.mask[43] = true; }
+        if cans.can_ryukyoku && !self.at_kan_select { self.mask[44] = true; }
+    }
     fn encode_obs(mut self) -> (Array2<f32>, Array1<bool>) {
         let state = self.state;
         let cans = state.last_cans;
@@ -787,6 +857,21 @@ impl PlayerState {
         let obs = PyArray2::from_owned_array(py, obs);
         let mask = PyArray1::from_owned_array(py, mask);
         (obs, mask)
+    }
+}
+
+#[pymethods]
+impl PlayerState {
+    #[pyo3(name = "encode_mask_only")]
+    fn encode_mask_only<'py>(
+        &self,
+        version: u32,
+        at_kan_select: bool,
+        py: Python<'py>,
+    ) -> Bound<'py, PyArray1<bool>> {
+        let mut ctx = ObsEncoderContext::new(self, version, at_kan_select);
+        ctx.fill_action_mask();
+        PyArray1::from_owned_array(py, ctx.mask)
     }
 }
 

@@ -478,7 +478,7 @@ impl PlayerState {
                     self.forbidden_tiles[bigger] = true;
                 }
             }
-        } else if deaka_tile_id > max && !min.is_multiple_of(9) {
+        } else if deaka_tile_id > max && ((min % 9) != 0) {
             // Like 56s chi 7s, then 4s is not allowed to discard
             let smaller = min - 1;
             if self.tehai[smaller] > 0 {

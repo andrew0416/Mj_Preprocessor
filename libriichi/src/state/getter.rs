@@ -6,6 +6,40 @@ use pyo3::prelude::*;
 #[pymethods]
 impl PlayerState {
     #[getter]
+    #[pyo3(name = "bakaze")]
+    fn bakaze_py(&self) -> String {
+        self.bakaze.to_string()
+    }
+
+    #[getter]
+    #[pyo3(name = "jikaze")]
+    fn jikaze_py(&self) -> String {
+        self.jikaze.to_string()
+    }
+
+    // === 메타 채널용: 패산/점수/리치 상태 ===
+    #[getter]
+    pub const fn tiles_left(&self) -> u8 {
+        self.tiles_left
+    }
+
+    // Python에서 인덱싱하기 쉬우라고 고정 길이 배열을 그대로 반환
+    #[getter]
+    pub const fn scores(&self) -> [i32; 4] {
+        self.scores
+    }
+
+    #[getter]
+    pub const fn riichi_declared(&self) -> [bool; 4] {
+        self.riichi_declared
+    }
+
+    #[getter]
+    pub const fn riichi_accepted(&self) -> [bool; 4] {
+        self.riichi_accepted
+    }
+
+    #[getter]
     #[inline]
     #[must_use]
     pub const fn player_id(&self) -> u8 {

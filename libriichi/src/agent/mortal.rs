@@ -296,11 +296,11 @@ impl BatchAgent for MortalBatchAgent {
         state: &PlayerState,
         _: Option<InvisibleState>,
     ) -> Result<EventExt> {
-        if self.enable_quick_eval
-            && let Some(ev) = self.quick_eval_reactions[index].take()
-        {
-            return Ok(EventExt::no_meta(ev));
+        if self.enable_quick_eval {
+            if let Some(ev) = self.quick_eval_reactions[index].take() {
+                return Ok(EventExt::no_meta(ev));
         }
+}
 
         if !self.evaluated {
             self.evaluate()?;
